@@ -1,0 +1,128 @@
+<?php
+/**
+ * Implementation of hook_wysiwyg_plugin().
+ */
+function twembed_wysiwyg_plugin($editor, $version) {
+  switch ($editor) {
+    case 'tinymce':
+      if ($version > 3) {
+          return array(
+            'twembed' => array(
+              'path' => drupal_get_path('module', 'twembed') .'/wysiwyg/tinymce/',
+              'filename' => 'editor_plugin.js',
+              'buttons' => array('twembed' => t('Twitter Embed')),
+              'url' => 'https://github.com/niuware/tinyTweetEmbed/tree/master/js/tinymce/plugins/twembed',
+              'load' => TRUE,
+            ),
+          );
+      }
+    break;
+  }
+}
+
+/**
+ * Implementation of hook_menu().
+ *
+ * @return An array of menu items.
+ */
+function twembed_menu() {
+  watchdog('twembed','menu');
+  $items = array();
+
+  $items['twembed/wysiwyg'] = array(
+    'title' => 'Twitter Embed',
+    'description' => 'WYSIWYG Popup',
+    'page callback' => 'twembed_wysiwyg_popup',
+    'access arguments' => array('access twitter wysiwyg popup'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_permission().
+ *
+ * @return An array of valid permissions for the module
+ */
+function twembed_permission() {
+  return array(
+    'access twitter wysiwyg popup' => array(
+      'title' => t('Access Twitter WYSIWYG popup'),
+      'description' => t('Allow users to access Twitter WYSIWYG popup window'),
+    ),
+  );
+}
+
+function twembed_theme($existing, $type, $theme, $path) {
+  watchdog('twembed','theme');
+  return array(
+    'twembed_wysiwyg_popup' => array(
+      'variables' => array(
+        'path' => NULL,
+        'tinymce_path' => NULL,
+        'tinymce_js' => NULL,
+      ),
+      'template' => 'twembed-wysiwyg-popup',
+      'path' => drupal_get_path('module', 'twembed') . '/theme',
+    ),
+  );
+}
+/**
+ * Load the WYSIWYG popup window.
+ */
+function twembed_wysiwyg_popup() {
+  watchdog('twembed','popup');
+  $path = base_path() . drupal_get_path('module', 'twembed');
+  $tinymce_path = base_path() .'sites/all/libraries';
+  $tinymce_js = $tinymce_path .'/tinymce/jscripts/tiny_mce/tiny_mce_popup.js';
+
+  print theme('twembed_wysiwyg_popup', array(
+    'path' => $path,
+    'tinymce_path' => $tinymce_path, 
+    'tinymce_js' => $tinymce_js,
+    'form' => render(drupal_get_form('_twembed_form'))
+  ));
+  exit();
+}
+
+function _twembed_form() {
+  watchdog('twembed','form');
+  $form['#action'] = '#';
+  $form['#id'] = 'twembed_popup_form';
+  $form['#prefix'] = '<div id="twembed_popup">';
+  $form['#suffix'] = '</div>';
+  $form['#attributes'] = array(
+    'onsubmit' => array('insertTwembedCode(); return false;'),
+  );
+
+  $form['twembed']['url'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Twitter Embed Code'),
+    '#size' => 60,
+    '#default_value' => '',
+    '#weight' => 1,
+    '#suffix' => '<p>Insert your embed code in the box above. To do this, go to <a href="http://twitter.com" target="_blank">Twitter</a>, and click on the ... by tweet, then click Embed Tweet. Copy the text into this box.</p>  <p>For more info, go to <a href="https://dev.twitter.com/web/embedded-tweets#embed-from-twitter-com" target="_blank">this guide on Twitter</a> under Embed from Twitter.com</p>',
+    '#required' => true,
+  );
+
+  $form['insert'] = array(
+    '#type' => 'submit',
+    '#id' => 'insert',
+    '#value' => t('Insert'),
+    '#weight' => 98,
+  );
+
+  $form['cancel'] = array(
+    '#type' => 'button',
+    '#id' => 'cancel',
+    '#value' => t('Cancel'),
+    '#attributes' => array(
+      'onclick' => array('tinyMCEPopup.close(); return false;'),
+    ),
+    '#weight' => 99,
+  );
+
+  return $form;
+}
+

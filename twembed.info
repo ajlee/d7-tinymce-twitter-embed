@@ -1,0 +1,6 @@
+name = twitter embed
+description = adds a button to tinymce wysiwyg editor for adding tweets
+package = custom
+core = 7.x
+files[] = twembed.module
+url = http://github.com/ajlee/d7-tinymce-twitter-embed
